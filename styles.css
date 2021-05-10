@@ -1,5 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 
+body {
+    overflow-x: hidden;
+}
 .swal2-popup.swal2-toast {
   flex-direction: column;
   align-items: stretch;
