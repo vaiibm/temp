@@ -142,7 +142,7 @@ __webpack_require__.r(__webpack_exports__);
 class WorkoutService {
     constructor(http) {
         this.http = http;
-        this.URL = "";
+        this.URL = "http://localhost:8081/";
     }
     getTrackWorkout(trackDate) {
         return this.http.get(this.URL + 'workout/date/' + trackDate + 'T00:00:00');
@@ -340,6 +340,13 @@ class ViewComponent {
     }
     startClick(workout, i) {
         this.workout = workout;
+        // this.workout.startDateTime
+        // let temp:any=new Date().toISOString().split(".")[0]
+        // this.workout.startDateTime=temp;
+        var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+        var localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -5);
+        this.workout.startDateTime = localISOTime;
+        console.log(this.workout.startDateTime);
         this.workoutarray[i].started = "started";
         document.getElementById('showView').style.display = 'none';
         document.getElementById('showStart').style.display = 'block';
@@ -353,6 +360,9 @@ class ViewComponent {
     endClick(workout) {
         //this.getFieldData();
         this.workout = workout;
+        var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+        var localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -5);
+        this.workout.endDateTime = localISOTime;
         document.getElementById('showView').style.display = 'none';
         document.getElementById('showEnd').style.display = 'block';
     }
@@ -1383,10 +1393,36 @@ class TrackWorkoutComponent {
         this.barChartLegend = true;
         this.barChartPlugins = [];
         this.barChartData = [
-            { data: [], label: 'Best Fruits' }
+            { data: [], label: 'Calories Burnt per Workout' }
         ];
     }
-    deleteWorkout(id) {
+    deleteWorkout(id, name) {
+        sweetalert2__WEBPACK_IMPORTED_MODULE_0___default.a.fire({
+            title: 'Are you sure want to Delete this Workout?',
+            text: 'You will not be able to recover this in future!!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.value) {
+                const observable = this.workoutService.deleteWorkout(id);
+                observable.subscribe(response => {
+                    console.log(response);
+                    sweetalert2__WEBPACK_IMPORTED_MODULE_0___default.a.fire('Deleted!', 'Workout Deleted Successfully!.', 'success');
+                    return this.showChart();
+                }, error => {
+                    console.log(error);
+                    if (error.status != 200) {
+                        sweetalert2__WEBPACK_IMPORTED_MODULE_0___default.a.fire('Deletion Failed!', 'Workout Deletion Failed!.');
+                    }
+                    else {
+                        sweetalert2__WEBPACK_IMPORTED_MODULE_0___default.a.fire('Deleted!', 'Workout Deleted Successfully!.', 'success');
+                        this.showChart();
+                    }
+                });
+            }
+        });
     }
     show(synopsis) {
         document.getElementById('showSynopsis').innerHTML = synopsis;
@@ -1407,8 +1443,8 @@ class TrackWorkoutComponent {
                 //return diffInMs / 1000;
                 // var diff =(this.workoutArray[i].startDateTime.parse- this.workoutArray[i].endDateTime.parse) / 1000;
                 //diff /= 60;
-                console.log(Math.abs(Math.round((time / 1000) * this.workoutArray[i].caloriesBurnt)));
-                this.barChartData[0].data[i] = Math.abs(Math.round((time / 1000) * this.workoutArray[i].caloriesBurnt));
+                console.log(Math.abs(Math.round((time / 1000) * this.workoutArray[i].caloriesBurnt / 60)));
+                this.barChartData[0].data[i] = Math.abs(Math.round((time / 1000) * this.workoutArray[i].caloriesBurnt / 60));
                 this.barChartLabels[i] = this.workoutArray[i].title;
             }
             // Swal.fire(
@@ -1426,6 +1462,13 @@ class TrackWorkoutComponent {
         });
     }
     ngOnInit() {
+        var today = new Date();
+        let temp = new Date((today.getFullYear()), today.getMonth(), today.getDate() - 6);
+        let tempp = temp.toISOString().split("T")[0];
+        this.trackDate = tempp;
+        //let temp:any;
+        // temp=this.trackDate.toLocaleDateString();
+        this.showChart();
     }
 }
 TrackWorkoutComponent.ɵfac = function TrackWorkoutComponent_Factory(t) { return new (t || TrackWorkoutComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdirectiveInject"](_workout_service__WEBPACK_IMPORTED_MODULE_2__["WorkoutService"])); };
@@ -1682,7 +1725,7 @@ class WorkoutFormComponent {
     }
 }
 WorkoutFormComponent.ɵfac = function WorkoutFormComponent_Factory(t) { return new (t || WorkoutFormComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_workout_service__WEBPACK_IMPORTED_MODULE_3__["WorkoutService"])); };
-WorkoutFormComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: WorkoutFormComponent, selectors: [["app-workout-form"]], inputs: { parent: "parent", workout: "workout" }, outputs: { sendWorkouParentt: "sendWorkouParentt", successHandler1: "successHandler1" }, decls: 25, vars: 6, consts: [[1, "form-group"], ["type", "text", "id", "title", "required", "", 1, "form-control", 3, "ngModel", "ngModelChange"], ["for", "title", 1, "form-control-placeholder"], ["type", "note", "id", "note", "required", "", 1, "form-control", 3, "ngModel", "ngModelChange"], ["for", "note", 1, "form-control-placeholder"], [1, "d-flex", "justify-content-left"], ["type", "text", "id", "inputCalories", "required", "", 1, "form-control", 3, "ngModel", "ngModelChange"], ["for", "inputCalories", 1, "form-control-placeholder"], ["type", "button", 1, "btn", "btn-link", 2, "padding", "1%", "margin", "0px", 3, "click"], [1, "fas", "fa-plus"], [1, "fa", "fa-minus", "fa-spin"], ["id", "inputState", 1, "form-control", 3, "ngModel", "ngModelChange"], [4, "ngFor", "ngForOf"], [1, "form-group", "form-inline", 2, "margin", "0%", "justify-content", "center"], ["type", "button", 1, "btn", "btn-success", 2, "width", "40%", 3, "click"], ["type", "button", "id", "cancelUpdate", 1, "btn", "btn-info", 2, "width", "30%", 3, "click"]], template: function WorkoutFormComponent_Template(rf, ctx) { if (rf & 1) {
+WorkoutFormComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: WorkoutFormComponent, selectors: [["app-workout-form"]], inputs: { parent: "parent", workout: "workout" }, outputs: { sendWorkouParentt: "sendWorkouParentt", successHandler1: "successHandler1" }, decls: 25, vars: 6, consts: [[1, "form-group"], ["type", "text", "id", "title", "required", "", 1, "form-control", 3, "ngModel", "ngModelChange"], ["for", "title", 1, "form-control-placeholder"], ["type", "note", "id", "note", "required", "", 1, "form-control", 3, "ngModel", "ngModelChange"], ["for", "note", 1, "form-control-placeholder"], [1, "d-flex", "justify-content-left"], ["type", "text", "id", "inputCalories", "required", "", 1, "form-control", 3, "ngModel", "ngModelChange"], ["for", "inputCalories", 1, "form-control-placeholder"], ["type", "button", 1, "btn", "btn-link", 2, "padding", "1%", "margin", "0px", 3, "click"], [1, "fas", "fa-plus"], [1, "fa", "fa-minus"], ["id", "inputState", 1, "form-control", 3, "ngModel", "ngModelChange"], [4, "ngFor", "ngForOf"], [1, "form-group", "form-inline", 2, "margin", "0%", "justify-content", "center"], ["type", "button", 1, "btn", "btn-success", 2, "width", "40%", 3, "click"], ["type", "button", "id", "cancelUpdate", 1, "btn", "btn-info", 2, "width", "30%", 3, "click"]], template: function WorkoutFormComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "input", 1);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function WorkoutFormComponent_Template_input_ngModelChange_1_listener($event) { return ctx.workout.title = $event; });
@@ -2034,7 +2077,7 @@ __webpack_require__.r(__webpack_exports__);
 class CategoryService {
     constructor(http) {
         this.http = http;
-        this.URL = "";
+        this.URL = "http://localhost:8081/";
     }
     ;
     addCategory(category) {
