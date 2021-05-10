@@ -117,7 +117,7 @@ __webpack_require__.r(__webpack_exports__);
 class WorkoutService {
     constructor(http) {
         this.http = http;
-        this.URL = "http://localhost:8081/";
+        this.URL = "";
     }
     getTrackWorkout(trackDate) {
         return this.http.get(this.URL + 'workout/date/' + trackDate + 'T00:00:00');
@@ -2146,7 +2146,7 @@ __webpack_require__.r(__webpack_exports__);
 class CategoryService {
     constructor(http) {
         this.http = http;
-        this.URL = "http://localhost:8081/";
+        this.URL = "";
     }
     ;
     addCategory(category) {
